@@ -36,7 +36,8 @@ class ProcessingPipeline(ABC):
             return data
         except Exception as e:
             self.stats["failed"] += 1
-            return f"Recovery successful: backup output used after error -> {e}"
+            return f"Recovery successful: backup output used after error \
+-> {e}"
 
     def get_stats(self) -> Dict[str, Union[int, float]]:
         return self.stats
@@ -87,7 +88,7 @@ class TransformStage:
                 "enriched": True
             }
 
-        if "actions" in  data:
+        if "actions" in data:
             cleaned_actions = [action for action in data["actions"] if action]
             data["actions"] = cleaned_actions
             data["action_count"] = len(cleaned_actions)
@@ -102,9 +103,12 @@ class TransformStage:
             if not valid_readings:
                 raise ValueError("Invalid data format")
             data["reading_count"] = len(valid_readings)
-            data["average"] = round(sum(valid_readings) / len(valid_readings), 1)
-            data["high_readings"] = len([reading for reading in valid_readings if reading > 25])
-            data["normal_readings"] = len([reading for reading in valid_readings if reading <= 25])
+            data["average"] = round(sum(valid_readings) /
+                                    len(valid_readings), 1)
+            data["high_readings"] = len([reading for reading in valid_readings
+                                         if reading > 25])
+            data["normal_readings"] = len([reading for reading
+                                           in valid_readings if reading <= 25])
 
         return data
 
@@ -138,7 +142,8 @@ class JSONAdapter(ProcessingPipeline):
                 raise ValueError("Invalid data format")
             return self.run(data)
         except Exception as e:
-            return f"Recovery successful: backup output used after error -> {e}"
+            return f"Recovery successful: backup output used after \
+error -> {e}"
 
 
 class CSVAdapter(ProcessingPipeline):
@@ -150,7 +155,8 @@ class CSVAdapter(ProcessingPipeline):
         try:
             return self.run(data)
         except Exception as e:
-            return f"Recovery successful: backup output used after error -> {e}"
+            return f"Recovery successful: backup output used after \
+error -> {e}"
 
 
 class StreamAdapter(ProcessingPipeline):
@@ -172,8 +178,8 @@ class StreamAdapter(ProcessingPipeline):
 
             raise ValueError("Invalid data format")
         except Exception as e:
-            return f"Recovery successful: backup output used after error -> {e}"
-
+            return f"Recovery successful: backup output used after \
+error -> {e}"
 
 
 class NexusManager:
@@ -196,7 +202,8 @@ class NexusManager:
         return result
 
     def get_stats(self) -> Dict:
-        return {name: pipeline.get_stats() for name, pipeline in self.pipelines.items()}
+        return {name: pipeline.get_stats() for name, pipeline in
+                self.pipelines.items()}
 
 
 if __name__ == "__main__":
@@ -221,7 +228,8 @@ if __name__ == "__main__":
     print("Processing JSON data through pipeline...")
     print('Input: {"sensor": "temp", "value": 23.5, "unit": "C"}')
     print("Transform: Enriched with metadata and validation")
-    json_result = manager.process("json", {"sensor": "temp", "value": 23.5, "unit": "C"})
+    json_result = manager.process("json", {"sensor": "temp",
+                                           "value": 23.5, "unit": "C"})
     print(f"Output: {json_result}\n")
 
     print("Processing CSV data through same pipeline...")
@@ -243,7 +251,18 @@ if __name__ == "__main__":
     print("=== Pipeline Chaining Demo ===")
     print("Pipeline A -> Pipeline B -> Pipeline C")
     print("Data flow: Raw -> Processed -> Analyzed -> Stored\n")
-    manager.chain_process(["json"], {"records": 100, "stage": "raw"})
+    json_pipeline.stages.pop()
+    stream_pipeline.stages.pop()
+    csv_pipeline.stages.pop()
+    data = {
+        "user": "alice",
+        "actions": ["login", "view", "click", "logout"],
+        "readings": [26.5, 24.2, 27.8, 23.1, 25.0],
+        "value": 26.5,
+        "unit": "C",
+        "timestamp": "2026-04-05T12:00:00"
+    }
+    print(manager.chain_process(["json", "stream", "csv"], data))
     print("Chain result: 100 records processed through 3-stage pipeline")
     print("Performance: 95% efficiency, 0.2s total processing time\n")
 
